@@ -87,6 +87,7 @@ class EngineJob<R> implements DecodeJob.Callback<R>,
 
   public void start(DecodeJob<R> decodeJob) {
     this.decodeJob = decodeJob;
+    // 从缓存中解码 或者从非缓存
     GlideExecutor executor = decodeJob.willDecodeFromCache()
         ? diskCacheExecutor
         : getActiveSourceExecutor();
@@ -175,22 +176,22 @@ class EngineJob<R> implements DecodeJob.Callback<R>,
     } else if (hasResource) {
       throw new IllegalStateException("Already have resource");
     }
-    engineResource = engineResourceFactory.build(resource, isCacheable);
+    engineResource = engineResourceFactory.build(resource, isCacheable);// 包装
     hasResource = true;
 
     // Hold on to resource for duration of request so we don't recycle it in the middle of
     // notifying if it synchronously released by one of the callbacks.
     engineResource.acquire();
-    listener.onEngineJobComplete(key, engineResource);
+    listener.onEngineJobComplete(key, engineResource);// 继续向上回调 数据  到Engin
 
-    for (ResourceCallback cb : cbs) {
+    for (ResourceCallback cb : cbs) {// 各种回调
       if (!isInIgnoredCallbacks(cb)) {
         engineResource.acquire();
-        cb.onResourceReady(engineResource, dataSource);
+        cb.onResourceReady(engineResource, dataSource);//回调到 SIngleRequest
       }
     }
     // Our request is complete, so we can release the resource.
-    engineResource.release();
+    engineResource.release();// 请求完成释放资源
 
     release(false /*isRemovedFromQueue*/);
   }
@@ -228,6 +229,7 @@ class EngineJob<R> implements DecodeJob.Callback<R>,
   public void onResourceReady(Resource<R> resource, DataSource dataSource) {
     this.resource = resource;
     this.dataSource = dataSource;
+    // 向handler 发送完成请求标记
     MAIN_THREAD_HANDLER.obtainMessage(MSG_COMPLETE, this).sendToTarget();
   }
 
@@ -240,6 +242,7 @@ class EngineJob<R> implements DecodeJob.Callback<R>,
   @Override
   public void reschedule(DecodeJob<?> job) {
     if (isCancelled) {
+      //请求取消
       MAIN_THREAD_HANDLER.obtainMessage(MSG_CANCELLED, this).sendToTarget();
     } else {
       getActiveSourceExecutor().execute(job);
@@ -292,7 +295,8 @@ class EngineJob<R> implements DecodeJob.Callback<R>,
       EngineJob<?> job = (EngineJob<?>) message.obj;
       switch (message.what) {
         case MSG_COMPLETE:
-          job.handleResultOnMainThread();
+          //收到请求成功 标记
+          job.handleResultOnMainThread();//进入
           break;
         case MSG_EXCEPTION:
           job.handleExceptionOnMainThread();

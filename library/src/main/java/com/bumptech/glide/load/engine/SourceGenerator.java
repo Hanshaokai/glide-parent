@@ -42,7 +42,7 @@ class SourceGenerator implements DataFetcherGenerator,
     if (dataToCache != null) {
       Object data = dataToCache;
       dataToCache = null;
-      cacheData(data);
+      cacheData(data); // 进行缓存
     }
 
     if (sourceCacheGenerator != null && sourceCacheGenerator.startNext()) {
@@ -58,6 +58,7 @@ class SourceGenerator implements DataFetcherGenerator,
           && (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())
           || helper.hasLoadPath(loadData.fetcher.getDataClass()))) {
         started = true;
+        //this 集成 回调出数据  请求代码在这里 返回的是 字节流
         loadData.fetcher.loadData(helper.getPriority(), this);
       }
     }
@@ -101,13 +102,15 @@ class SourceGenerator implements DataFetcherGenerator,
 
   @Override
   public void onDataReady(Object data) {
+    // 这里获得回调的字节流 回到主线程 case SOURCE:// 从网络获取
+    //与此代码有关return new SourceGenerator(decodeHelper, this);
     DiskCacheStrategy diskCacheStrategy = helper.getDiskCacheStrategy();
-    if (data != null && diskCacheStrategy.isDataCacheable(loadData.fetcher.getDataSource())) {
+    if (data != null && diskCacheStrategy.isDataCacheable(loadData.fetcher.getDataSource())) {//r若是存储缓存的情况
       dataToCache = data;
       // We might be being called back on someone else's thread. Before doing anything, we should
       // reschedule to get back onto Glide's thread.
       cb.reschedule();
-    } else {
+    } else {//不存缓存
       cb.onDataFetcherReady(loadData.sourceKey, data, loadData.fetcher,
           loadData.fetcher.getDataSource(), originalKey);
     }

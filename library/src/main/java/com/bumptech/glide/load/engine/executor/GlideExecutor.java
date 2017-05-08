@@ -190,6 +190,7 @@ public final class GlideExecutor extends ThreadPoolExecutor {
   @Override
   public void execute(Runnable command) {
     if (executeSynchronously) {
+      //这里进入线程 请求数据
       command.run();
     } else {
       super.execute(command);

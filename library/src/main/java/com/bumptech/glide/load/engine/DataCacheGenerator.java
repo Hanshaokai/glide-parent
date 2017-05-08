@@ -61,13 +61,13 @@ class DataCacheGenerator implements DataFetcherGenerator,
 
     loadData = null;
     boolean started = false;
-    while (!started && hasNextModelLoader()) {
+    while (!started && hasNextModelLoader()) {//循环请求
       ModelLoader<File, ?> modelLoader = modelLoaders.get(modelLoaderIndex++);
-      loadData =
+      loadData =//各种加载loader
           modelLoader.buildLoadData(cacheFile, helper.getWidth(), helper.getHeight(),
               helper.getOptions());
       if (loadData != null && helper.hasLoadPath(loadData.fetcher.getDataClass())) {
-        started = true;
+        started = true; //获取数据
         loadData.fetcher.loadData(helper.getPriority(), this);
       }
     }

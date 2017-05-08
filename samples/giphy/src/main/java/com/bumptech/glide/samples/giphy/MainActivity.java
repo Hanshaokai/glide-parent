@@ -12,11 +12,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.ListPreloader;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader;
 import com.bumptech.glide.util.ViewPreloadSizeProvider;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -35,8 +37,8 @@ public class MainActivity extends Activity implements Api.Monitor {
     ImageView giphyLogoView = (ImageView) findViewById(R.id.giphy_logo_view);
 
     Glide.with(this)
-        .load(R.raw.large_giphy_logo)
-        .into(giphyLogoView);
+            .load(R.raw.large_giphy_logo)
+            .into(giphyLogoView);
 
     RecyclerView gifList = (RecyclerView) findViewById(R.id.gif_list);
     LinearLayoutManager layoutManager = new LinearLayoutManager(this);

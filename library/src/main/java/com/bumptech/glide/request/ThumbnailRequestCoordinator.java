@@ -66,8 +66,8 @@ public class ThumbnailRequestCoordinator implements RequestCoordinator,
     if (request.equals(thumb)) {
       return;
     }
-    if (coordinator != null) {
-      coordinator.onRequestSuccess(this);
+    if (coordinator != null) {//
+      coordinator.onRequestSuccess(this);// 继续进入此方法  ？？
     }
     // Clearing the thumb is not necessarily safe if the thumb is being displayed in the Target,
     // as a layer in a cross fade for example. The only way we know the thumb is not being

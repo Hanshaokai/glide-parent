@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import com.bumptech.glide.load.DataSource;
-
 /**
  * A {@link TransitionFactory} that produces {@link ViewTransition}s.
  *
@@ -17,6 +16,8 @@ public class ViewAnimationFactory<R> implements TransitionFactory<R> {
   public ViewAnimationFactory(Animation animation) {
     this(new ConcreteViewTransitionAnimationFactory(animation));
   }
+
+
 
   public ViewAnimationFactory(int animationId) {
     this(new ResourceViewTransitionAnimationFactory(animationId));

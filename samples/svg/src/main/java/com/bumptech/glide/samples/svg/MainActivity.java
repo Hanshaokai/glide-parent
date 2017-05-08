@@ -1,8 +1,5 @@
 package com.bumptech.glide.samples.svg;
 
-import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
-import static com.bumptech.glide.request.RequestOptions.placeholderOf;
-
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.graphics.drawable.PictureDrawable;
@@ -17,6 +14,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
 
 import java.io.File;
+
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
+import static com.bumptech.glide.request.RequestOptions.placeholderOf;
 
 /**
  * Displays an SVG image loaded from an android raw resource.
@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
 
     imageViewRes = (ImageView) findViewById(R.id.svg_image_view1);
     imageViewNet = (ImageView) findViewById(R.id.svg_image_view2);
-
+    //imageViewNet.setVisibility(View.GONE);
     requestBuilder = Glide.with(this)
         .as(PictureDrawable.class)
         .apply(placeholderOf(R.drawable.image_loading)

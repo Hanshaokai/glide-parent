@@ -264,6 +264,7 @@ public final class GlideBuilder {
   }
 
   public Glide build(Context context) {
+    // 初始化 执行者
     if (sourceExecutor == null) {
       sourceExecutor = GlideExecutor.newSourceExecutor();
     }
