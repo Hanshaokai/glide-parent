@@ -20,6 +20,6 @@ public class BitmapImageViewTarget extends ImageViewTarget<Bitmap> {
      */
     @Override
     protected void setResource(Bitmap resource) {
-        view.setImageBitmap(resource);
+        view.setImageBitmap(resource); // 放置bitmap
     }
 }

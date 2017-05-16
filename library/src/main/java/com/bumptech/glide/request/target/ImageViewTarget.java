@@ -53,8 +53,8 @@ public abstract class ImageViewTarget<Z> extends ViewTarget<ImageView, Z>
   @Override
   public void onLoadStarted(@Nullable Drawable placeholder) {
     super.onLoadStarted(placeholder);
-    setResourceInternal(null);
-    setDrawable(placeholder);
+    setResourceInternal(null);// 先将原先view 上的 图片缓存置空
+    setDrawable(placeholder);// 往view 里放置view
   }
 
   /**
@@ -85,10 +85,10 @@ public abstract class ImageViewTarget<Z> extends ViewTarget<ImageView, Z>
 
   @Override
   public void onResourceReady(Z resource, @Nullable Transition<? super Z> transition) {
-    if (transition == null || !transition.transition(resource, this)) {
-      setResourceInternal(resource);
+    if (transition == null || !transition.transition(resource, this)) {// 一种动画处理一种不动画处理
+      setResourceInternal(resource);// 这里设置图片 resource这里是bitmap 原始未封装的
     } else {
-      maybeUpdateAnimatable(resource);
+      maybeUpdateAnimatable(resource);//  这里不设置图片
     }
   }
 
@@ -114,7 +114,7 @@ public abstract class ImageViewTarget<Z> extends ViewTarget<ImageView, Z>
   private void maybeUpdateAnimatable(@Nullable Z resource) {
     if (resource instanceof Animatable) {
       animatable = (Animatable) resource;
-      animatable.start();
+      animatable.start(); // 开始动画
     } else {
       animatable = null;
     }

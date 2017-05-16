@@ -81,7 +81,8 @@ public class RequestManagerRetriever implements Handler.Callback {
         this.factory = factory != null ? factory : DEFAULT_FACTORY;
         handler = new Handler(Looper.getMainLooper(), this /* Callback */);
     }
-// 通过 application 获得 requestManager
+
+    // 通过 application 获得 requestManager
     private RequestManager getApplicationManager(Context context) {
         // Either an application context or we're on a background thread.
         if (applicationManager == null) {
@@ -104,7 +105,8 @@ public class RequestManagerRetriever implements Handler.Callback {
     }
 
     /**
-     *  两种情况 一种application 和非application情况
+     * 两种情况 一种application 和非application情况
+     *
      * @param context
      * @return
      */
@@ -144,7 +146,8 @@ public class RequestManagerRetriever implements Handler.Callback {
         }
     }
 
-    public RequestManager get(Activity activity) {// application  和非application 情况
+    public RequestManager get(Activity activity) {
+        // application  和非application 情况
         if (Util.isOnBackgroundThread()) {// 如何是后台线程
             return get(activity.getApplicationContext());
         } else {
@@ -315,13 +318,14 @@ public class RequestManagerRetriever implements Handler.Callback {
                 current = new RequestManagerFragment();
                 current.setParentFragmentHint(parentHint);
                 pendingRequestManagerFragments.put(fm, current);
-                fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();
+                fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();// 在activity 保存状态后提交 此方法保证不崩溃 状态丢失不可恢复
                 handler.obtainMessage(ID_REMOVE_FRAGMENT_MANAGER, fm).sendToTarget();
             }
         }
         return current;
     }
-// 如果是非application 周期关联
+
+    // 如果是非application 周期关联
     private RequestManager fragmentGet(Context context, android.app.FragmentManager fm,
                                        android.app.Fragment parentHint) {
         /**
@@ -333,7 +337,7 @@ public class RequestManagerRetriever implements Handler.Callback {
             // TODO(b/27524013): Factor out this Glide.get() call.
             Glide glide = Glide.get(context);//  applicationManager =
             // factory.build(glide, new ApplicationLifecycle(), new EmptyRequestManagerTreeNode());  当参数是application 的情况
-            requestManager =
+            requestManager = // RequestManagerFactory 工厂模式 建造 请求管理器
                     factory.build(glide, current.getLifecycle(), current.getRequestManagerTreeNode());
             current.setRequestManager(requestManager);
         }
@@ -351,7 +355,7 @@ public class RequestManagerRetriever implements Handler.Callback {
                 current.setParentFragmentHint(parentHint);
                 pendingSupportRequestManagerFragments.put(fm, current);
                 fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();
-                handler.obtainMessage(ID_REMOVE_SUPPORT_FRAGMENT_MANAGER, fm).sendToTarget();
+                handler.obtainMessage(ID_REMOVE_SUPPORT_FRAGMENT_MANAGER, fm).sendToTarget();//通知等待表 删除 fragment Message msg = handler.obtainMessage(); 减少内存开销
             }
         }
         return current;
@@ -359,13 +363,15 @@ public class RequestManagerRetriever implements Handler.Callback {
 
     private RequestManager supportFragmentGet(Context context, FragmentManager fm,
                                               Fragment parentHint) {
-        SupportRequestManagerFragment current = getSupportRequestManagerFragment(fm, parentHint);
+        SupportRequestManagerFragment current = getSupportRequestManagerFragment(fm, parentHint);// curent   放置 requestManager 和 ActivityFragmentLifecycle 周期其中包含
+        // 对requestManager 的监听 和connectVitiy 管理器的监听
         RequestManager requestManager = current.getRequestManager();
         if (requestManager == null) {
             // TODO(b/27524013): Factor out this Glide.get() call.
             Glide glide = Glide.get(context);
-            requestManager =
-                    factory.build(glide, current.getLifecycle(), current.getRequestManagerTreeNode());
+            //  current.getLifecycle();SupportRequestManagerFragment   在requestManager 工厂中获得了 对 requestMnanger 的监听 并控制requestManager
+            //SupportRequestManagerFragment 放置着SupportRequestManagerFragment 和requestManager
+            requestManager = factory.build(glide, current.getLifecycle(), current.getRequestManagerTreeNode());
             current.setRequestManager(requestManager);
         }
         return requestManager;
@@ -383,7 +389,7 @@ public class RequestManagerRetriever implements Handler.Callback {
                 removed = pendingRequestManagerFragments.remove(fm);
                 break;
             case ID_REMOVE_SUPPORT_FRAGMENT_MANAGER:
-                FragmentManager supportFm = (FragmentManager) message.obj;
+                FragmentManager supportFm = (FragmentManager) message.obj;// 获得值
                 key = supportFm;
                 removed = pendingSupportRequestManagerFragments.remove(supportFm);
                 break;

@@ -351,7 +351,7 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
      * @return The given target.
      * @see RequestManager#clear(Target)
      */
-    public <Y extends Target<TranscodeType>> Y into(@NonNull Y target) {
+    public <Y extends Target<TranscodeType>> Y into(@NonNull Y target) {//DrawableImageViewTarget
         // 如：DrawableImageViewTarget
         Util.assertMainThread();
         Preconditions.checkNotNull(target);
@@ -361,15 +361,15 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
 
         Request previous = target.getRequest();
 
-        if (previous != null) {
+        if (previous != null) {// 清掉 view 中原先存在的放置的请求  下面重新放置
             requestManager.clear(target);
         }
 
         requestOptions.lock();
         //下三个方法 完成请求和图片放置
-        Request request = buildRequest(target);
-        target.setRequest(request);// SingleRequest 获得回调数据 其对象 被包装在此request  此事target 已获得数据
-        requestManager.track(target, request);  //
+        Request request = buildRequest(target);//DrawableImageViewTarget 封装 target
+        target.setRequest(request);// SingleRequest 获得回调数据 其对象 被包装在此request  此事target 已获得数据    // request 请求放在了VIew 的 tag 里
+        requestManager.track(target, request);  //  前者是 view  的封装类的对象 后者是 包括请求操作 类的对象
 
         return target;
     }
@@ -387,8 +387,7 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
     public Target<TranscodeType> into(ImageView view) {
         Util.assertMainThread();
         Preconditions.checkNotNull(view);
-
-        if (!requestOptions.isTransformationSet()
+        if (!requestOptions.isTransformationSet()//请求参数的判断
                 && requestOptions.isTransformationAllowed()
                 && view.getScaleType() != null) {
             if (requestOptions.isLocked()) {
@@ -575,11 +574,11 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
                 requestOptions.getOverrideWidth(), requestOptions.getOverrideHeight());
     }
 
-    private Request buildRequestRecursive(Target<TranscodeType> target,
-                                          @Nullable ThumbnailRequestCoordinator parentCoordinator,
+    private Request buildRequestRecursive(Target<TranscodeType> target,//DrawableImageViewTarget  缩略图加载 和 图片属性
+                                          @Nullable ThumbnailRequestCoordinator parentCoordinator,// null
                                           TransitionOptions<?, ? super TranscodeType> transitionOptions,
                                           Priority priority, int overrideWidth, int overrideHeight) {
-        if (thumbnailBuilder != null) {
+        if (thumbnailBuilder != null) { // 有缩略图情况下
             // Recursive case: contains a potentially recursive thumbnail request builder.
             if (isThumbnailBuilt) {
                 throw new IllegalStateException("You cannot use a request as both the main request and a "
@@ -605,11 +604,11 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
 
             ThumbnailRequestCoordinator coordinator = new ThumbnailRequestCoordinator(parentCoordinator);
             Request fullRequest = obtainRequest(target, requestOptions, coordinator,
-                    transitionOptions, priority, overrideWidth, overrideHeight);
+                    transitionOptions, priority, overrideWidth, overrideHeight);// 全图请求
             isThumbnailBuilt = true;
             // Recursively generate thumbnail requests.
             Request thumbRequest = thumbnailBuilder.buildRequestRecursive(target, coordinator,
-                    thumbTransitionOptions, thumbPriority, thumbOverrideWidth, thumbOverrideHeight);
+                    thumbTransitionOptions, thumbPriority, thumbOverrideWidth, thumbOverrideHeight);// 缩略图请求
             isThumbnailBuilt = false;
             coordinator.setRequests(fullRequest, thumbRequest);
             return coordinator;
@@ -626,7 +625,7 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
 
             coordinator.setRequests(fullRequest, thumbnailRequest);
             return coordinator;
-        } else {
+        } else { // 没有缩略图情况
             // Base case: no thumbnail.
             return obtainRequest(target, requestOptions, parentCoordinator, transitionOptions, priority,
                     overrideWidth, overrideHeight);
@@ -641,14 +640,14 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
 
         return SingleRequest.obtain(
                 context,
-                model,
-                transcodeClass,
-                requestOptions,
+                model,// 链接好 或资源
+                transcodeClass,// 资源类型
+                requestOptions,// 请求图片参数设置
                 overrideWidth,
                 overrideHeight,
-                priority,
-                target,
-                requestListener,
+                priority,// 优先级
+                target,// DrawbleImagViewTarget
+                requestListener,// 请求监听
                 requestCoordinator,
                 context.getEngine(),
                 transitionOptions.getTransitionFactory());

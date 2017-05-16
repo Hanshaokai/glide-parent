@@ -12,16 +12,16 @@ import android.support.annotation.NonNull;
  */
 public class DefaultConnectivityMonitorFactory implements ConnectivityMonitorFactory {
 
-  @NonNull
-  public ConnectivityMonitor build(
-      @NonNull Context context,
-      @NonNull ConnectivityMonitor.ConnectivityListener listener) {
-    final int res = context.checkCallingOrSelfPermission("android.permission.ACCESS_NETWORK_STATE");
-    final boolean hasPermission = res == PackageManager.PERMISSION_GRANTED;
-    if (hasPermission) {
-      return new DefaultConnectivityMonitor(context, listener);
-    } else {
-      return new NullConnectivityMonitor();
+    @NonNull
+    public ConnectivityMonitor build(
+            @NonNull Context context,
+            @NonNull ConnectivityMonitor.ConnectivityListener listener) {
+        final int res = context.checkCallingOrSelfPermission("android.permission.ACCESS_NETWORK_STATE");//判断是否有网络访问权限
+        final boolean hasPermission = res == PackageManager.PERMISSION_GRANTED;
+        if (hasPermission) {
+            return new DefaultConnectivityMonitor(context, listener);
+        } else {
+            return new NullConnectivityMonitor();
+        }
     }
-  }
 }

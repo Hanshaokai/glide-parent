@@ -88,7 +88,7 @@ public class RequestManagerFragment extends Fragment {
   @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
   public Set<RequestManagerFragment> getDescendantRequestManagerFragments() {
     if (rootRequestManagerFragment == this) {
-      return Collections.unmodifiableSet(childRequestManagerFragments);
+      return Collections.unmodifiableSet(childRequestManagerFragments); // 指定这个set不可修改 修改抛异常
     } else if (rootRequestManagerFragment == null
         || Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
       // Pre JB MR1 doesn't allow us to get the parent fragment so we can't introspect hierarchy,

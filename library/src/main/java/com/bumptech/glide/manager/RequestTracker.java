@@ -35,11 +35,11 @@ public class RequestTracker {
    * Starts tracking the given request.
    */
   public void runRequest(Request request) {
-    requests.add(request);
-    if (!isPaused) {
-      request.begin();
+    requests.add(request);//  放在了 请求集合里
+    if (!isPaused) { // 如果没停止 就开始进行请求
+      request.begin();// 启动SinggleRequest 类
     } else {
-      pendingRequests.add(request);
+      pendingRequests.add(request);//停止就放到延迟加载 请求即合理
     }
   }
 

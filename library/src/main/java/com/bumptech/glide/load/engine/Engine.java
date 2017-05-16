@@ -157,16 +157,16 @@ public class Engine implements EngineJobListener,
             boolean isMemoryCacheable,
             boolean useUnlimitedSourceExecutorPool,
             boolean onlyRetrieveFromCache,
-            ResourceCallback cb) {
+            ResourceCallback cb) {//ResourceCallback 回调 singleRequest实现
         Util.assertMainThread();
         long startTime = LogTime.getLogTime();
 
         EngineKey key = keyFactory.buildKey(model, signature, width, height, transformations,
                 resourceClass, transcodeClass, options);
-// 涉及缓存 从文件获取
+// 涉及缓存 从文件获取  这里两种缓存 后面 细致探究
         EngineResource<?> cached = loadFromCache(key, isMemoryCacheable);
         if (cached != null) {
-            cb.onResourceReady(cached, DataSource.MEMORY_CACHE);
+            cb.onResourceReady(cached, DataSource.MEMORY_CACHE);// 从缓存中取得 回调到 singleRequest 中
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
                 //从缓存中获取
                 logWithTimeAndKey("Loaded resource from cache", startTime, key);
@@ -183,13 +183,13 @@ public class Engine implements EngineJobListener,
             return null;
         }
 
-        EngineJob<?> current = jobs.get(key);
+        EngineJob<?> current = jobs.get(key); // 从集合中拿 集合中没有 走下面 构造
         if (current != null) {
-            current.addCallback(cb);
+            current.addCallback(cb);// 接着把 SIngleRequest的对象放入 EnginJob 中  在EnginJob中调用 SingleRequest 中的加载完成的方法
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
                 logWithTimeAndKey("Added to existing load", startTime, key);
             }
-            return new LoadStatus(cb, current);
+            return new LoadStatus(cb, current); // 走这里 没有了下载过程
         }
 // 线程涉及到了  开启线程为下载图片做准备
         EngineJob<R> engineJob = engineJobFactory.build(key, isMemoryCacheable,
@@ -210,10 +210,10 @@ public class Engine implements EngineJobListener,
                 onlyRetrieveFromCache,
                 options,
                 engineJob);
-        jobs.put(key, engineJob);
+        jobs.put(key, engineJob);// 加到集合缓存
         //回调是否成功
-        engineJob.addCallback(cb);
-        engineJob.start(decodeJob);
+        engineJob.addCallback(cb); // 回调 是加到缓存后再单独加的
+        engineJob.start(decodeJob);// 进入下载过程
 
         if (Log.isLoggable(TAG, Log.VERBOSE)) {
             logWithTimeAndKey("Started new load", startTime, key);
@@ -290,7 +290,7 @@ public class Engine implements EngineJobListener,
         if (resource != null) {
             resource.setResourceListener(key, this);//往其中加监听
 
-            if (resource.isCacheable()) {  // 缓存
+            if (resource.isCacheable()) {  // 进行缓存
                 activeResources.put(key, new ResourceWeakReference(key, resource, getReferenceQueue()));
             }
         }

@@ -1,7 +1,5 @@
 package com.bumptech.glide.samples.giphy;
 
-import static com.bumptech.glide.request.RequestOptions.decodeTypeOf;
-
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -12,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.DataSource;
@@ -20,6 +19,8 @@ import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.google.gson.Gson;
+
+import static com.bumptech.glide.request.RequestOptions.decodeTypeOf;
 
 /**
  * An {@link android.app.Activity} for displaying full size original GIFs.
@@ -71,7 +72,7 @@ public class FullscreenActivity extends Activity {
         .listener(new RequestListener<Drawable>() {
           @Override
           public boolean onLoadFailed(GlideException e, Object model, Target<Drawable> target,
-              boolean isFirstResource) {
+              boolean isFirstResource) {// 空链接 或空资源 失败 抓异常回调到这里
             return false;
           }
 

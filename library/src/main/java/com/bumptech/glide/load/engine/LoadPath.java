@@ -37,6 +37,7 @@ public class LoadPath<Data, ResourceType, Transcode> {
 
   public Resource<Transcode> load(DataRewinder<Data> rewinder, Options options, int width,
       int height, DecodePath.DecodeCallback<ResourceType> decodeCallback) throws GlideException {
+    //rewinder  InputStreamRewinder
     List<Exception> exceptions = listPool.acquire();
     try {
       return loadWithExceptionList(rewinder, options, width, height, decodeCallback, exceptions);

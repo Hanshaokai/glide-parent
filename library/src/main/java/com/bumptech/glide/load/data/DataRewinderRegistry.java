@@ -41,9 +41,10 @@ public class DataRewinderRegistry {
     }
 
     if (result == null) {
-      result = (DataRewinder.Factory<T>) DEFAULT_FACTORY;
+      result = (DataRewinder.Factory<T>) DEFAULT_FACTORY; //重绕机 工厂得到重绕机
     }
-    return result.build(data);
+
+    return result.build(data);  // 创建获得InputStreamRewinder
   }
 
   private static class DefaultRewinder implements DataRewinder<Object> {

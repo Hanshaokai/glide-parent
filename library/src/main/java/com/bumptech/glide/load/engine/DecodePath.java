@@ -41,8 +41,8 @@ public class DecodePath<DataType, ResourceType, Transcode> {
   public Resource<Transcode> decode(DataRewinder<DataType> rewinder, int width, int height,
       Options options, DecodeCallback<ResourceType> callback) throws GlideException {
     Resource<ResourceType> decoded = decodeResource(rewinder, width, height, options);
-    Resource<ResourceType> transformed = callback.onResourceDecoded(decoded);
-    return transcoder.transcode(transformed);
+    Resource<ResourceType> transformed = callback.onResourceDecoded(decoded);//获得bitmap 的Resource的包装类  到DecodeJob 的实现方法里
+    return transcoder.transcode(transformed);// 继续封装成LazyBitmapDrawableResource
   }
 
   private Resource<ResourceType> decodeResource(DataRewinder<DataType> rewinder, int width,
@@ -62,8 +62,8 @@ public class DecodePath<DataType, ResourceType, Transcode> {
       ResourceDecoder<DataType, ResourceType> decoder = decoders.get(i);
       try {
         DataType data = rewinder.rewindAndGet();
-        if (decoder.handles(data, options)) {
-          data = rewinder.rewindAndGet();
+        if (decoder.handles(data, options)) { // 多种解码方式  可以自定义解码 返回 ture 或 false
+          data = rewinder.rewindAndGet(); //bufferedStream 返回
           result = decoder.decode(data, width, height, options);
         }
       } catch (IOException e) {
@@ -81,7 +81,7 @@ public class DecodePath<DataType, ResourceType, Transcode> {
     if (result == null) {
       throw new GlideException(failureMessage, new ArrayList<>(exceptions));
     }
-    return result;
+    return result; //返回 bitmap 的封装类
   }
 
   @Override

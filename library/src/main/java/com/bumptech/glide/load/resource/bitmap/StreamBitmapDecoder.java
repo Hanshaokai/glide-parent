@@ -57,7 +57,7 @@ public class StreamBitmapDecoder implements ResourceDecoder<InputStream, Bitmap>
     MarkEnforcingInputStream invalidatingStream = new MarkEnforcingInputStream(exceptionStream);
     UntrustedCallbacks callbacks = new UntrustedCallbacks(bufferedStream, exceptionStream);
     try {
-      return downsampler.decode(invalidatingStream, width, height, options, callbacks);
+      return downsampler.decode(invalidatingStream, width, height, options, callbacks);// 给字节流编码 返回 bitmap  封装类
     } finally {
       exceptionStream.release();
       if (ownsBufferedStream) {

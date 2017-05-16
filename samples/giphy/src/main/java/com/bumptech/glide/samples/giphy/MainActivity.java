@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.ListPreloader;
 import com.bumptech.glide.RequestBuilder;
+import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader;
 import com.bumptech.glide.util.ViewPreloadSizeProvider;
 
@@ -39,7 +40,7 @@ public class MainActivity extends Activity implements Api.Monitor {
     Glide.with(this)
             .load(R.raw.large_giphy_logo)
             .into(giphyLogoView);
-
+    RequestManager with = Glide.with(this);
     RecyclerView gifList = (RecyclerView) findViewById(R.id.gif_list);
     LinearLayoutManager layoutManager = new LinearLayoutManager(this);
     gifList.setLayoutManager(layoutManager);

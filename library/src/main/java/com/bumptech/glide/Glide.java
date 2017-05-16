@@ -628,14 +628,14 @@ public class Glide implements ComponentCallbacks2 {
 
     void registerRequestManager(RequestManager requestManager) {
         synchronized (managers) {
-            if (managers.contains(requestManager)) {
+            if (managers.contains(requestManager)) {// 注册 请求管理监听  已添加不再添加
                 throw new IllegalStateException("Cannot register already registered manager");
             }
             managers.add(requestManager);
         }
     }
 
-    void unregisterRequestManager(RequestManager requestManager) {
+    void unregisterRequestManager(RequestManager requestManager) {// 解除注册监听
         synchronized (managers) {
             if (!managers.contains(requestManager)) {
                 throw new IllegalStateException("Cannot register not yet registered manager");

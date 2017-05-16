@@ -59,12 +59,12 @@ public class HttpUrlFetcher implements DataFetcher<InputStream> {
       callback.onLoadFailed(e);
       return;
     }
-
+// 此线程 为子线程可 进行长时间操作
     if (Log.isLoggable(TAG, Log.VERBOSE)) {
       Log.v(TAG, "Finished http url fetcher fetch in " + LogTime.getElapsedMillis(startTime)
           + " ms and loaded " + result);
     }
-    callback.onDataReady(result);
+    callback.onDataReady(result);// 获得数据走回调 回调到 SourceGenerator 中
   }
 
   private InputStream loadDataWithRedirects(URL url, int redirects, URL lastUrl,

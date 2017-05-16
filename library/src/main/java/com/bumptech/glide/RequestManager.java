@@ -69,6 +69,7 @@ public class RequestManager implements LifecycleListener {
     private final ConnectivityMonitor connectivityMonitor;
 
     @NonNull
+
     private BaseRequestOptions<?> requestOptions;
 
     public RequestManager(Glide glide, Lifecycle lifecycle, RequestManagerTreeNode treeNode) {
@@ -82,33 +83,32 @@ public class RequestManager implements LifecycleListener {
             Glide glide,
             Lifecycle lifecycle,
             RequestManagerTreeNode treeNode,
-            RequestTracker requestTracker,
+            RequestTracker requestTracker,// 请求追踪
+            // 链接管理工厂
             ConnectivityMonitorFactory factory) {
         this.glide = glide;
         this.lifecycle = lifecycle;
         this.treeNode = treeNode;
         this.requestTracker = requestTracker;
-
         final Context context = glide.getGlideContext().getBaseContext();
 // glid  中初始化的 连接管理器工厂 这里构建生产对象
-        connectivityMonitor =
-                factory.build(context, new RequestManagerConnectivityListener(requestTracker));
+        connectivityMonitor = factory.build(context, new RequestManagerConnectivityListener(requestTracker));
 
         // If we're the application level request manager, we may be created on a background thread.
         // In that case we cannot risk synchronously pausing or resuming requests, so we hack around the
         // issue by delaying adding ourselves as a lifecycle listener by posting to the main thread.
         // This should be entirely safe.
         if (Util.isOnBackgroundThread()) {
-            // 如果是在子线程 放到 主线程进行
+            // 如果是在子线程 放到 主线程进行   子线程有线程同步问题
             mainHandler.post(addSelfToLifecycle);
         } else {
-            lifecycle.addListener(this);
+            lifecycle.addListener(this);// lifecycle 监听并控制着 requesManager 和 connectivityMonitor
         }// 生命周期中 放置了 application 周期监听 和链接监视监听
         lifecycle.addListener(connectivityMonitor);
-
+// 获得 请求参数设置
         setRequestOptions(glide.getGlideContext().getDefaultRequestOptions());
 // glid  中放置 requestManager j监听
-        glide.registerRequestManager(this);
+        glide.registerRequestManager(this);// glid  监听控制着 requestManager
     }
 
     protected void setRequestOptions(@NonNull BaseRequestOptions<?> toSet) {
@@ -322,7 +322,7 @@ public class RequestManager implements LifecycleListener {
      * @return A new request builder for loading a {@link Drawable}.
      */
     public RequestBuilder<Drawable> asDrawable() {
-        return as(Drawable.class).transition(new DrawableTransitionOptions());
+        return as(Drawable.class).transition(new DrawableTransitionOptions());// 这里设置class类型 和DrawableTransitionOptions
     }
 
     /**
@@ -448,8 +448,8 @@ public class RequestManager implements LifecycleListener {
     }
 
     void track(Target<?> target, Request request) {
-        targetTracker.track(target);
-        requestTracker.runRequest(request);
+        targetTracker.track(target);// 将view 的封装对象放在 了  集合里
+        requestTracker.runRequest(request); // 启动请求 网络请求操作放在request 中 现在进行启动
     }
 
     BaseRequestOptions<?> getDefaultRequestOptions() {

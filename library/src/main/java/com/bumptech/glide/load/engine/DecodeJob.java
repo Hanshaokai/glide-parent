@@ -168,7 +168,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
      */
     private void onLoadFailed() {
         if (releaseManager.onFailed()) {
-            releaseInternal();
+            releaseInternal(); // 释放资源
         }
     }
 
@@ -223,7 +223,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
         // swallows all otherwise fatal exceptions, this will at least make it obvious to developers
         // that something is failing.
         try {
-            if (isCancelled) {
+            if (isCancelled) { // 如果释放 提醒失败 走失败回调
                 notifyFailed();
                 return;
             }
@@ -235,7 +235,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
                         + ", stage: " + stage, e);
             }
             // When we're encoding we've already notified our callback and it isn't safe to do so again.
-            if (stage != Stage.ENCODE) {
+            if (stage != Stage.ENCODE) {// 避免两次调用
                 notifyFailed();
             }
             if (!isCancelled) {
@@ -288,7 +288,6 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
                 && !(isStarted = currentGenerator.startNext())) {//这里找网络请求DataFetcherGenerator  数据缓存 资源缓存 网络请求
             stage = getNextStage(stage);
             currentGenerator = getNextGenerator();
-
             if (stage == Stage.SOURCE) {
                 reschedule();//进入找网络请求
                 return;
@@ -327,7 +326,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
     private Stage getNextStage(Stage current) {
         switch (current) {
             case INITIALIZE:
-                return diskCacheStrategy.decodeCachedResource()
+                return diskCacheStrategy.decodeCachedResource()// 用缓存 和不用缓存两种情况
                         ? Stage.RESOURCE_CACHE : getNextStage(Stage.RESOURCE_CACHE);
             case RESOURCE_CACHE:
                 return diskCacheStrategy.decodeCachedData()
@@ -346,7 +345,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
     @Override
     public void reschedule() {
         runReason = RunReason.SWITCH_TO_SOURCE_SERVICE; // 通过线程获取数据
-        callback.reschedule(this);// 进入找网络请求
+        callback.reschedule(this);// 进入找网络请求  EnginJob 中实现
     }
 
     @Override
@@ -358,7 +357,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
         this.currentFetcher = fetcher;
         this.currentDataSource = dataSource;
         this.currentAttemptingKey = attemptedKey;
-        if (Thread.currentThread() != currentThread) {//线程判断
+        if (Thread.currentThread() != currentThread) {//线程判断  如果不在子线程了 就在此开启子线程 进入子线程解码  仍然走decodeFromRetrievedData 方法
             runReason = RunReason.DECODE_DATA;
             callback.reschedule(this);
         } else {
@@ -390,22 +389,22 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
         }
         Resource<R> resource = null;
         try {
-            resource = decodeFromData(currentFetcher, currentData, currentDataSource);
+            resource = decodeFromData(currentFetcher, currentData, currentDataSource); // 对字节流解码方法  // 获得Bitmap 的Resource的封装类
         } catch (GlideException e) {
             e.setLoggingDetails(currentAttemptingKey, currentDataSource);
             exceptions.add(e);
         }
         if (resource != null) {
             //获得解码后的图片文件 数据
-            notifyEncodeAndRelease(resource, currentDataSource);
+            notifyEncodeAndRelease(resource, currentDataSource); //Bitmap 的Resource的封装类
         } else {
             runGenerators();
         }
     }
 
-    private void notifyEncodeAndRelease(Resource<R> resource, DataSource dataSource) {
+    private void notifyEncodeAndRelease(Resource<R> resource, DataSource dataSource) {//Bitmap 的Resource的封装类 和 数据来源类型
         if (resource instanceof Initializable) {
-            ((Initializable) resource).initialize();
+            ((Initializable) resource).initialize(); // 初始化 还不是 ImagView
         }
 
         Resource<R> result = resource;
@@ -415,7 +414,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
             result = lockedResource;
         }
 
-        notifyComplete(result, dataSource);// 提醒完成 继续回调
+        notifyComplete(result, dataSource);// 提醒完成 调用方法 继续回调
 
         stage = Stage.ENCODE;
         try {
@@ -437,7 +436,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
                 return null;
             }
             long startTime = LogTime.getLogTime();
-            Resource<R> result = decodeFromFetcher(data, dataSource);
+            Resource<R> result = decodeFromFetcher(data, dataSource); // 获得Bitmap 的Resource的封装类
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
                 logWithTimeAndKey("Decoded result " + result, startTime);
             }
@@ -451,17 +450,18 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
     private <Data> Resource<R> decodeFromFetcher(Data data, DataSource dataSource)
             throws GlideException {
         LoadPath<Data, ?, R> path = decodeHelper.getLoadPath((Class<Data>) data.getClass());
-        return runLoadPath(data, dataSource, path);
+        return runLoadPath(data, dataSource, path); // 返回bitmap的Resource 的封装类
     }
 
     private <Data, ResourceType> Resource<R> runLoadPath(Data data, DataSource dataSource,
                                                          LoadPath<Data, ResourceType, R> path) throws GlideException {
         DataRewinder<Data> rewinder = glideContext.getRegistry().getRewinder(data);
         try {
+            //InputStreamRewinder  rewinder
             return path.load(rewinder, options, width, height,
                     new DecodeCallback<ResourceType>(dataSource));
         } finally {
-            rewinder.cleanup();
+            rewinder.cleanup(); // 释放资源
         }
     }
 

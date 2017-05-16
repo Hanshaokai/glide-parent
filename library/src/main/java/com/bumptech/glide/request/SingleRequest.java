@@ -121,7 +121,7 @@ public final class SingleRequest<R> implements Request,
             RequestCoordinator requestCoordinator,
             Engine engine,
             TransitionFactory<? super R> animationFactory) {
-        @SuppressWarnings("unchecked") SingleRequest<R> request =
+        @SuppressWarnings("unchecked") SingleRequest<R> request =//的到未初始化的SingleRequest
                 (SingleRequest<R>) POOL.acquire();
         if (request == null) {
             request = new SingleRequest<>();
@@ -203,8 +203,8 @@ public final class SingleRequest<R> implements Request,
 
     @Override
     public void begin() {
-        stateVerifier.throwIfRecycled();
-        startTime = LogTime.getLogTime();
+        stateVerifier.throwIfRecycled();// 检测状态异常
+        startTime = LogTime.getLogTime(); // 记录当前时间为开始时间
         if (model == null) {
             if (Util.isValidDimensions(overrideWidth, overrideHeight)) {
                 width = overrideWidth;
@@ -218,17 +218,18 @@ public final class SingleRequest<R> implements Request,
             return;
         }
 // 最终的都要执行onSizeReday  图片请求在这个方法里
-        status = Status.WAITING_FOR_SIZE;
+        status = Status.WAITING_FOR_SIZE;// onSizeReady  里有异步线程 这里设置 等待 使view 先放置占位图片
         if (Util.isValidDimensions(overrideWidth, overrideHeight)) {
+            // 有尺寸进入 onSizeRady方法
             onSizeReady(overrideWidth, overrideHeight);
         } else {
-            target.getSize(this);
+            target.getSize(this); // 如果尺寸为空 就去获得默认尺寸 再回到 onSizeReady方法
         }
 
-        if ((status == Status.RUNNING || status == Status.WAITING_FOR_SIZE)
-                && canNotifyStatusChanged()) {
+        if ((status == Status.RUNNING || status == Status.WAITING_FOR_SIZE)// 等待尺寸或运行且 未完成（canNotifyStatusChanged缩略图请求为空 或未完成 都返回ture）
+                && canNotifyStatusChanged()) {//  等待请求时 放置占位图片
             //占位图片
-            target.onLoadStarted(getPlaceholderDrawable());
+            target.onLoadStarted(getPlaceholderDrawable());// 从图片设置属性类里 获得占位图片
         }
         if (Log.isLoggable(TAG, Log.VERBOSE)) {
             logV("finished run method in " + LogTime.getElapsedMillis(startTime));
@@ -358,7 +359,7 @@ public final class SingleRequest<R> implements Request,
         if (!canNotifyStatusChanged()) {
             return;
         }
-
+// 如果资源或链接为空 就 获得   从图片属性设置里拿  下载错误图片 或者备用图片  链接或资源 空就获得备用图片 不空就设置错误图片
         Drawable error = model == null ? getFallbackDrawable() : getErrorDrawable();
         if (error == null) {
             error = getPlaceholderDrawable();
@@ -378,7 +379,7 @@ public final class SingleRequest<R> implements Request,
         if (status != Status.WAITING_FOR_SIZE) {
             return;
         }
-        status = Status.RUNNING;
+        status = Status.RUNNING; // 将状态设置成正在运行
 
         float sizeMultiplier = requestOptions.getSizeMultiplier();
         this.width = maybeApplySizeMultiplier(width, sizeMultiplier);
@@ -387,6 +388,7 @@ public final class SingleRequest<R> implements Request,
         if (Log.isLoggable(TAG, Log.VERBOSE)) {
             logV("finished setup for calling load in " + LogTime.getElapsedMillis(startTime));
         }
+        //engine 在glide 初始胡时加入的
         loadStatus = engine.load(
                 glideContext,
                 model,
@@ -437,6 +439,7 @@ public final class SingleRequest<R> implements Request,
     @SuppressWarnings("unchecked")
     @Override
     public void onResourceReady(Resource<?> resource, DataSource dataSource) {
+        //返回的Bitmap 最终封装成的EngineResource
         stateVerifier.throwIfRecycled();
         loadStatus = null;
         if (resource == null) {
@@ -446,7 +449,7 @@ public final class SingleRequest<R> implements Request,
             return;
         }
 
-        Object received = resource.get();
+        Object received = resource.get();//得到bitmap
         if (received == null || !transcodeClass.isAssignableFrom(received.getClass())) {
             releaseResource(resource);
             GlideException exception = new GlideException("Expected to receive an object of "
@@ -459,14 +462,14 @@ public final class SingleRequest<R> implements Request,
             return;
         }
 
-        if (!canSetResource()) {
+        if (!canSetResource()) {  //放置 完成状态 要询问  缩略图请求
             releaseResource(resource);
             // We can't put the status to complete before asking canSetResource().
             status = Status.COMPLETE;
             return;
         }
 
-        onResourceReady((Resource<R>) resource, (R) received, dataSource);// 进入此方法
+        onResourceReady((Resource<R>) resource, (R) received, dataSource);// 进入此方法 最终封装成的EngineResource 第二个是bitmap 原始未封装的
     }
 
     /**
@@ -476,10 +479,10 @@ public final class SingleRequest<R> implements Request,
      * @param result   object returned by {@link Resource#get()}, checked for type and never
      *                 <code>null</code>
      */
-    private void onResourceReady(Resource<R> resource, R result, DataSource dataSource) {
+    private void onResourceReady(Resource<R> resource, R result, DataSource dataSource) { //最第一个 终封装成的EngineResource 和第二个是bitmap 原始未封装的
         // We must call isFirstReadyResource before setting status.
         boolean isFirstResource = isFirstReadyResource();
-        status = Status.COMPLETE;
+        status = Status.COMPLETE;// 获得资源 设置成完成状态
         this.resource = resource;
 
         if (glideContext.getLogLevel() <= Log.DEBUG) {
@@ -489,13 +492,14 @@ public final class SingleRequest<R> implements Request,
         }
 
         if (requestListener == null
-                || !requestListener.onResourceReady(result, model, target, dataSource, isFirstResource)) {// 两种回调 需回调一种
+                || !requestListener.onResourceReady(result, model, target, dataSource, isFirstResource)) {// 两种回调 需回调一种  一个是自己设置的继承监听回调 自己处理 一种是默认处理
+            // 自己处理 也可返回 false 表示自己没处理
             Transition<? super R> animation =// 涉及到动画
                     animationFactory.build(dataSource, isFirstResource);
             target.onResourceReady(result, animation); //  回调 数据 到 targetView  将图片 放到对应的ImageView
         }
 
-        notifyLoadSuccess();// 进入此方法
+        notifyLoadSuccess();// 进入此方法  通知缩略图请求
     }
 
     /**
@@ -518,10 +522,10 @@ public final class SingleRequest<R> implements Request,
         }
 
         loadStatus = null;
-        status = Status.FAILED;
+        status = Status.FAILED;// 下载失败将 失败标记赋予 状态字段
         //TODO: what if this is a thumbnail request?
         if (requestListener == null || !requestListener.onLoadFailed(e, model, target,
-                isFirstReadyResource())) {
+                isFirstReadyResource())) {// 如果自己对下载错误回调进行处理返回 ture 这里不再处理 如果返回false  这里 进行放置错误图片
             setErrorPlaceholder();
         }
     }

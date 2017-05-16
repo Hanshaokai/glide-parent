@@ -173,10 +173,11 @@ public final class Downsampler {
     boolean fixBitmapToRequestedDimensions = options.get(FIX_BITMAP_SIZE_TO_REQUESTED_DIMENSIONS);
 
     try {
+      // 进入此方法 编码
       Bitmap result = decodeFromWrappedStreams(is, bitmapFactoryOptions,
           downsampleStrategy, decodeFormat, requestedWidth, requestedHeight,
           fixBitmapToRequestedDimensions, callbacks);
-      return BitmapResource.obtain(result, bitmapPool);
+      return BitmapResource.obtain(result, bitmapPool);// 封装bitmap
     } finally {
       releaseOptions(bitmapFactoryOptions);
       byteArrayPool.put(bytesForOptions, byte[].class);
@@ -205,7 +206,7 @@ public final class Downsampler {
     int targetHeight = requestedHeight == Target.SIZE_ORIGINAL ? sourceHeight : requestedHeight;
 
     calculateScaling(downsampleStrategy, degreesToRotate, sourceWidth, sourceHeight, targetWidth,
-        targetHeight, options);
+        targetHeight, options); // 计算比例
 
     boolean isKitKatOrGreater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     // Prior to KitKat, the inBitmap size must exactly match the size of the bitmap we're decoding.
@@ -240,8 +241,8 @@ public final class Downsampler {
         setInBitmap(options, bitmapPool, expectedWidth, expectedHeight);
       }
     }
-    Bitmap downsampled = decodeStream(is, options, callbacks);
-    callbacks.onDecodeComplete(bitmapPool, downsampled);
+    Bitmap downsampled = decodeStream(is, options, callbacks);//解码 流
+    callbacks.onDecodeComplete(bitmapPool, downsampled);// 回调放入StreamBitmapDecoder中的集合
 
     if (Log.isLoggable(TAG, Log.VERBOSE)) {
       logDecode(sourceWidth, sourceHeight, sourceMimeType, options, downsampled,
@@ -421,7 +422,7 @@ public final class Downsampler {
     final Bitmap result;
     TransformationUtils.getBitmapDrawableLock().lock();
     try {
-      result = BitmapFactory.decodeStream(is, null, options);
+      result = BitmapFactory.decodeStream(is, null, options); // 图片工厂 解码 字节流  返回bitmap
     } catch (IllegalArgumentException e) {
       throw newIoExceptionForInBitmapAssertion(e, sourceWidth, sourceHeight, outMimeType, options);
     } finally {
