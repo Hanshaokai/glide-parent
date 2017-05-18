@@ -49,14 +49,14 @@ public class DrawableCrossFadeTransition implements Transition<Drawable> {
    * @return {@inheritDoc}
    */
   @Override
-  public boolean transition(Drawable current, ViewAdapter adapter) {
-    Drawable previous = adapter.getCurrentDrawable();
-    if (previous != null) {
+    public boolean transition(Drawable current, ViewAdapter adapter) {
+    Drawable previous = adapter.getCurrentDrawable(); // 放置图片前有 图片 拿到 不为空  实现渐变效果
+    if (previous != null) {// 不等于空 view 内有图片
       TransitionDrawable transitionDrawable =
-          new TransitionDrawable(new Drawable[] { previous, current });
+          new TransitionDrawable(new Drawable[] { previous, current });// 一个是当前图片 drawable 一个是 下载的drawble
       transitionDrawable.setCrossFadeEnabled(isCrossFadeEnabled);
       transitionDrawable.startTransition(duration);
-      adapter.setDrawable(transitionDrawable);
+      adapter.setDrawable(transitionDrawable); // 设置渐变动画 第一个渐变到第二个bitmap
       return true;
     } else {
       defaultAnimation.transition(current, adapter);

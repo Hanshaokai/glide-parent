@@ -28,6 +28,7 @@ import com.bumptech.glide.util.pool.StateVerifier;
  *
  * @param <R> The type of the resource that will be transcoded from the loaded resource.
  */
+// 图片资源回调 尺寸获得即绘制完成后回调 回调
 public final class SingleRequest<R> implements Request,
         SizeReadyCallback,
         ResourceCallback,
@@ -481,7 +482,7 @@ public final class SingleRequest<R> implements Request,
      */
     private void onResourceReady(Resource<R> resource, R result, DataSource dataSource) { //最第一个 终封装成的EngineResource 和第二个是bitmap 原始未封装的
         // We must call isFirstReadyResource before setting status.
-        boolean isFirstResource = isFirstReadyResource();
+        boolean isFirstResource = isFirstReadyResource();// 是否是第一此返回的资源  status = Status.COMPLETE;  还未设置
         status = Status.COMPLETE;// 获得资源 设置成完成状态
         this.resource = resource;
 

@@ -310,16 +310,16 @@ public class RequestManagerRetriever implements Handler.Callback {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     RequestManagerFragment getRequestManagerFragment(
-            final android.app.FragmentManager fm, android.app.Fragment parentHint) {
-        RequestManagerFragment current = (RequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG);
+            final android.app.FragmentManager fm, android.app.Fragment parentHint) {// 有父fragement 情况
+        RequestManagerFragment current = (RequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG);//先从管理器中拿
         if (current == null) {
-            current = pendingRequestManagerFragments.get(fm);
+            current = pendingRequestManagerFragments.get(fm);// 没有再从等待map 中拿
             if (current == null) {
-                current = new RequestManagerFragment();
-                current.setParentFragmentHint(parentHint);
+                current = new RequestManagerFragment();// 没有 就新建 frgament
+                current.setParentFragmentHint(parentHint);// 空不走
                 pendingRequestManagerFragments.put(fm, current);
                 fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();// 在activity 保存状态后提交 此方法保证不崩溃 状态丢失不可恢复
-                handler.obtainMessage(ID_REMOVE_FRAGMENT_MANAGER, fm).sendToTarget();
+                handler.obtainMessage(ID_REMOVE_FRAGMENT_MANAGER, fm).sendToTarget();// 将fragement 管理工厂  中的 等待map中对应的fragment 清除掉
             }
         }
         return current;
@@ -351,7 +351,7 @@ public class RequestManagerRetriever implements Handler.Callback {
         if (current == null) {
             current = pendingSupportRequestManagerFragments.get(fm);
             if (current == null) {
-                current = new SupportRequestManagerFragment();
+                current = new SupportRequestManagerFragment();//  同时创建 lifecycle
                 current.setParentFragmentHint(parentHint);
                 pendingSupportRequestManagerFragments.put(fm, current);
                 fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();
@@ -371,7 +371,7 @@ public class RequestManagerRetriever implements Handler.Callback {
             Glide glide = Glide.get(context);
             //  current.getLifecycle();SupportRequestManagerFragment   在requestManager 工厂中获得了 对 requestMnanger 的监听 并控制requestManager
             //SupportRequestManagerFragment 放置着SupportRequestManagerFragment 和requestManager
-            requestManager = factory.build(glide, current.getLifecycle(), current.getRequestManagerTreeNode());
+            requestManager = factory.build(glide, current.getLifecycle(), current.getRequestManagerTreeNode());//创建 请求管理器  这里 current 的lifecycle 监听控制了 requestManager
             current.setRequestManager(requestManager);
         }
         return requestManager;

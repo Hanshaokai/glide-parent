@@ -63,7 +63,7 @@ public class MultiModelLoaderFactory {
     List<ModelLoaderFactory<Model, Data>> factories = new ArrayList<>();
     for (Iterator<Entry<?, ?>> iterator = entries.iterator(); iterator.hasNext(); ) {
       Entry<?, ?> entry = iterator.next();
-      if (entry.handles(modelClass, dataClass)) {
+      if (entry.handles(modelClass, dataClass)) {// 是相同的类 或超类 接口就移除
         iterator.remove();
         factories.add(this.<Model, Data>getFactory(entry));
       }
@@ -179,7 +179,7 @@ public class MultiModelLoaderFactory {
     }
 
     public boolean handles(Class<?> modelClass) {
-      return this.modelClass.isAssignableFrom(modelClass);
+      return this.modelClass.isAssignableFrom(modelClass);// 判断该类是否是参数的统一类 或者 超类 接口
     }
   }
 

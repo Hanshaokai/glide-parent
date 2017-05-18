@@ -52,10 +52,10 @@ class SourceGenerator implements DataFetcherGenerator,
 
     loadData = null;
     boolean started = false;
-    while (!started && hasNextModelLoader()) {
+    while (!started && hasNextModelLoader()) {// 遍历所有的 包装地址
       loadData = helper.getLoadData().get(loadDataListIndex++);
       if (loadData != null
-          && (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())
+          && (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())// 不是 从缓存中获得 资源类型不为空 进行 网络请求 返回 ture  上一级 不走循环体
           || helper.hasLoadPath(loadData.fetcher.getDataClass()))) {
         started = true;
         //this 集成 回调出数据  请求代码在这里 返回的是 字节流
@@ -66,7 +66,7 @@ class SourceGenerator implements DataFetcherGenerator,
   }
 
   private boolean hasNextModelLoader() {
-    return loadDataListIndex < helper.getLoadData().size();
+    return loadDataListIndex < helper.getLoadData().size();// 从注册类里 获得 数据类型
   }
 
   private void cacheData(Object dataToCache) {

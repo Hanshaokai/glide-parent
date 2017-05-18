@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * Downsamples, decodes, and rotates images according to their exif orientation.
  */
-public final class Downsampler {
+public final class  Downsampler {
   private static final String TAG = "Downsampler";
   /**
    * Indicates the {@link com.bumptech.glide.load.DecodeFormat} that will be used in conjunction

@@ -163,8 +163,8 @@ public class Engine implements EngineJobListener,
 
         EngineKey key = keyFactory.buildKey(model, signature, width, height, transformations,
                 resourceClass, transcodeClass, options);
-// 涉及缓存 从文件获取  这里两种缓存 后面 细致探究
-        EngineResource<?> cached = loadFromCache(key, isMemoryCacheable);
+// 涉及缓存  这里两种缓存 后面 细致探究
+        EngineResource<?> cached = loadFromCache(key, isMemoryCacheable);// 从缓存中获取
         if (cached != null) {
             cb.onResourceReady(cached, DataSource.MEMORY_CACHE);// 从缓存中取得 回调到 singleRequest 中
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
@@ -173,7 +173,7 @@ public class Engine implements EngineJobListener,
             }
             return null;
         }
-        // 从缓存中获取
+        //  磁盘缓存 若删除了 就从活性缓存中获取
         EngineResource<?> active = loadFromActiveResources(key, isMemoryCacheable);
         if (active != null) {
             cb.onResourceReady(active, DataSource.MEMORY_CACHE);
@@ -183,7 +183,7 @@ public class Engine implements EngineJobListener,
             return null;
         }
 
-        EngineJob<?> current = jobs.get(key); // 从集合中拿 集合中没有 走下面 构造
+        EngineJob<?> current = jobs.get(key); // 从集合中拿 集合中没有 走下面 构造    引擎中此引擎任务 是否之前已加入 加入就不走了
         if (current != null) {
             current.addCallback(cb);// 接着把 SIngleRequest的对象放入 EnginJob 中  在EnginJob中调用 SingleRequest 中的加载完成的方法
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
@@ -249,9 +249,9 @@ public class Engine implements EngineJobListener,
             return null;
         }
 
-        EngineResource<?> cached = getEngineResourceFromCache(key);
+        EngineResource<?> cached = getEngineResourceFromCache(key); // 并做了删除
         if (cached != null) {
-            cached.acquire();
+            cached.acquire();// 放到活性缓存中
             activeResources.put(key, new ResourceWeakReference(key, cached, getReferenceQueue()));
         }
         return cached;

@@ -85,7 +85,7 @@ public abstract class ImageViewTarget<Z> extends ViewTarget<ImageView, Z>
 
   @Override
   public void onResourceReady(Z resource, @Nullable Transition<? super Z> transition) {
-    if (transition == null || !transition.transition(resource, this)) {// 一种动画处理一种不动画处理
+    if (transition == null || !transition.transition(resource, this)) {// 一种动画处理一种不动画处理  设置了图片返回ture
       setResourceInternal(resource);// 这里设置图片 resource这里是bitmap 原始未封装的
     } else {
       maybeUpdateAnimatable(resource);//  这里不设置图片

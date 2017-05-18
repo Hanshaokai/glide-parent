@@ -151,7 +151,7 @@ public class Glide implements ComponentCallbacks2 {
      */
     public static Glide get(Context context) {
         if (glide == null) {
-            synchronized (Glide.class) {
+            synchronized (Glide.class) {  // 第一次取 初始化单利模式 初始化 Glid
                 if (glide == null) {
                     initGlide(context);
                 }
@@ -177,48 +177,52 @@ public class Glide implements ComponentCallbacks2 {
 
         GeneratedAppGlideModule annotationGeneratedModule = getAnnotationGeneratedGlideModules();
         List<GlideModule> manifestModules = Collections.emptyList();// 单例 得到list 实例
-        if (annotationGeneratedModule == null || annotationGeneratedModule.isManifestParsingEnabled()) {
-            manifestModules = new ManifestParser(applicationContext).parse();// 解析清单文件
+        if (annotationGeneratedModule == null || annotationGeneratedModule.isManifestParsingEnabled()) { // 这里返回false 不可解析 避免放置放入模块两次
+            manifestModules = new ManifestParser(applicationContext).parse();// 如果反射为空 解析清单文件  这里不为空 解析获得 list为空
         }
 
         if (annotationGeneratedModule != null
-                && !annotationGeneratedModule.getExcludedModuleClasses().isEmpty()) {
+                && !annotationGeneratedModule.getExcludedModuleClasses().isEmpty()) {  //实体生成类和清单文件 解析 都不空的情况   去掉重复项
             Set<Class<?>> excludedModuleClasses =
                     annotationGeneratedModule.getExcludedModuleClasses();
             for (Iterator<GlideModule> iterator = manifestModules.iterator(); iterator.hasNext(); ) {
                 GlideModule current = iterator.next();
-                if (!excludedModuleClasses.contains(current.getClass())) {
+                if (!excludedModuleClasses.contains(current.getClass())) { // 去掉重复项
                     continue;
                 }
                 if (Log.isLoggable(TAG, Log.DEBUG)) {
                     Log.d(TAG, "AppGlideModule excludes manifest GlideModule: " + current);
                 }
-                iterator.remove();
+                iterator.remove();// 清单中获取的模块集合 去掉 与从反射获得的实例 相同的
+
             }
         }
 
         if (Log.isLoggable(TAG, Log.DEBUG)) {
-            for (GlideModule glideModule : manifestModules) {
-                Log.d(TAG, "Discovered GlideModule from manifest: " + glideModule.getClass());
+            for (GlideModule glideModule : manifestModules) {// 打印清单解析出的模块类名称
+                Log.d(TAG, "Discovered GlideModule from manifest: " + glideModule.getClass());  // 这里glide 依赖的模块 有 okhttp  和volley
             }
         }
-
+// 这里没有空 获得了 请求管理工厂GeneratedRequestManagerFactory
         RequestManagerRetriever.RequestManagerFactory factory =
                 annotationGeneratedModule != null
                         ? annotationGeneratedModule.getRequestManagerFactory() : null;
-        GlideBuilder builder = new GlideBuilder()// glide 建造者
+        GlideBuilder builder = new GlideBuilder()// glide 建造者   放入 请求管理工厂
                 .setRequestManagerFactory(factory);
+
         for (GlideModule module : manifestModules) {
-            module.applyOptions(applicationContext, builder);
+            module.applyOptions(applicationContext, builder);// do nothing
         }
         if (annotationGeneratedModule != null) {
-            annotationGeneratedModule.applyOptions(applicationContext, builder);
+            annotationGeneratedModule.applyOptions(applicationContext, builder);// do nothing
         }
-        glide = builder.build(applicationContext);// 初始化glide 各种成员 包括requestManagerRetriever
+        //=================================================
+        glide = builder.build(applicationContext);// 初始化glide 各种成员 包括requestManagerRetriever  注册在这里面完成
         for (GlideModule module : manifestModules) {
-            module.registerComponents(applicationContext, glide.registry);
+            module.registerComponents(applicationContext, glide.registry);/// 往依赖模块中注册组件  替换成 模块中的 类组件
+
         }
-        if (annotationGeneratedModule != null) {
+        if (annotationGeneratedModule != null) {// 往生成器 中注册模块   class
             annotationGeneratedModule.registerComponents(applicationContext, glide.registry);
         }
     }
@@ -282,17 +286,17 @@ public class Glide implements ComponentCallbacks2 {
         ByteBufferGifDecoder byteBufferGifDecoder =
                 new ByteBufferGifDecoder(context, registry.getImageHeaderParsers(), bitmapPool, arrayPool);
 
-        registry.register(ByteBuffer.class, new ByteBufferEncoder())
-                .register(InputStream.class, new StreamEncoder(arrayPool))
+        registry.register(ByteBuffer.class, new ByteBufferEncoder())// 注册几种编码器
+                .register(InputStream.class, new StreamEncoder(arrayPool))// 输入流编码器
         /* Bitmaps */
                 .append(ByteBuffer.class, Bitmap.class,
-                        new ByteBufferBitmapDecoder(downsampler))
+                        new ByteBufferBitmapDecoder(downsampler))// 注册解码器
                 .append(InputStream.class, Bitmap.class,
                         new StreamBitmapDecoder(downsampler, arrayPool))
                 .append(ParcelFileDescriptor.class, Bitmap.class, new VideoBitmapDecoder(bitmapPool))
-                .register(Bitmap.class, new BitmapEncoder())
+                .register(Bitmap.class, new BitmapEncoder())// 注册编码器
         /* GlideBitmapDrawables */
-                .append(ByteBuffer.class, BitmapDrawable.class,
+                .append(ByteBuffer.class, BitmapDrawable.class,// 注册解码器
                         new BitmapDrawableDecoder<>(resources, bitmapPool,
                                 new ByteBufferBitmapDecoder(downsampler)))
                 .append(InputStream.class, BitmapDrawable.class,
@@ -357,7 +361,7 @@ public class Glide implements ComponentCallbacks2 {
                 .register(Bitmap.class, byte[].class, new BitmapBytesTranscoder())
                 .register(GifDrawable.class, byte[].class, new GifDrawableBytesTranscoder());
 
-        ImageViewTargetFactory imageViewTargetFactory = new ImageViewTargetFactory();
+        ImageViewTargetFactory imageViewTargetFactory = new ImageViewTargetFactory();// 目标view 工厂
         glideContext = new GlideContext(context, registry, imageViewTargetFactory,
                 defaultRequestOptions, engine, this, logLevel);
     }

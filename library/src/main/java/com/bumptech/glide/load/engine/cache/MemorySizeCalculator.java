@@ -33,13 +33,13 @@ public final class MemorySizeCalculator {
       int targetArrayPoolSize, float maxSizeMultiplier, float lowMemoryMaxSizeMultiplier) {
     this.context = context;
     arrayPoolSize =
-        isLowMemoryDevice(activityManager)
-            ? targetArrayPoolSize / LOW_MEMORY_BYTE_ARRAY_POOL_DIVISOR
+        isLowMemoryDevice(activityManager)// 判断设备是否缓存比较低
+            ? targetArrayPoolSize / LOW_MEMORY_BYTE_ARRAY_POOL_DIVISOR// 分一半
             : targetArrayPoolSize;
     final int maxSize = getMaxSize(activityManager, maxSizeMultiplier, lowMemoryMaxSizeMultiplier);
 
     final int screenSize = screenDimensions.getWidthPixels() * screenDimensions.getHeightPixels()
-        * BYTES_PER_ARGB_8888_PIXEL;
+        * BYTES_PER_ARGB_8888_PIXEL;// 每个字节的像素数
 
     int targetPoolSize = Math.round(screenSize * bitmapPoolScreens);
     int targetMemoryCacheSize = Math.round(screenSize * memoryCacheScreens);
@@ -111,7 +111,7 @@ public final class MemorySizeCalculator {
   private static boolean isLowMemoryDevice(ActivityManager activityManager) {
     // Explicitly check with an if statement, on some devices both parts of boolean expressions
     // can be evaluated even if we'd normally expect a short circuit.
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {//版本大于 19 在判断 小与19  不是第缓存
       return activityManager.isLowRamDevice();
     } else {
       return false;
@@ -146,9 +146,9 @@ public final class MemorySizeCalculator {
     public Builder(Context context) {
       this.context = context;
       activityManager =
-          (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+          (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);//得到 activity 的管理器
       screenDimensions =
-          new DisplayMetricsScreenDimensions(context.getResources().getDisplayMetrics());
+          new DisplayMetricsScreenDimensions(context.getResources().getDisplayMetrics());// new  屏幕大小对象 可获得 屏幕高宽像素
     }
 
     /**

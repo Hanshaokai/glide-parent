@@ -26,21 +26,21 @@ public final class ManifestParser {
       Log.d(TAG, "Loading Glide modules");
     }
     List<GlideModule> modules = new ArrayList<>();
-    try {
+    try {//  //在application应用<meta-data>元素。
       ApplicationInfo appInfo = context.getPackageManager()
           .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
       if (appInfo.metaData == null) {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
           Log.d(TAG, "Got null app info metadata");
         }
-        return modules;
+        return modules;// 空的 meta
       }
-      if (Log.isLoggable(TAG, Log.VERBOSE)) {
+      if (Log.isLoggable(TAG, Log.VERBOSE)) { // 打印特定级别的 log
         Log.v(TAG, "Got app info metadata: " + appInfo.metaData);
       }
-      for (String key : appInfo.metaData.keySet()) {
-        if (GLIDE_MODULE_VALUE.equals(appInfo.metaData.get(key))) {
-          modules.add(parseModule(key));
+      for (String key : appInfo.metaData.keySet()) {// 便利所有的 meta key
+        if (GLIDE_MODULE_VALUE.equals(appInfo.metaData.get(key))) {// 找GlideModule
+          modules.add(parseModule(key));// 反射获得 对象 放入集合
           if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Loaded Glide module: " + key);
           }

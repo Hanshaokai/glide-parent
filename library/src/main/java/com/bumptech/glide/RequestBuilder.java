@@ -368,7 +368,7 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
         requestOptions.lock();
         //下三个方法 完成请求和图片放置
         Request request = buildRequest(target);//DrawableImageViewTarget 封装 target
-        target.setRequest(request);// SingleRequest 获得回调数据 其对象 被包装在此request  此事target 已获得数据    // request 请求放在了VIew 的 tag 里
+        target.setRequest(request);// SingleRequest 获得回调数据 其对象 被包装在此request    // request 请求放在了VIew 的 tag 里
         requestManager.track(target, request);  //  前者是 view  的封装类的对象 后者是 包括请求操作 类的对象
 
         return target;
@@ -414,7 +414,6 @@ public class RequestBuilder<TranscodeType> implements Cloneable {
                     // Do nothing.
             }
         }
-
         return into(context.buildImageViewTarget(view, transcodeClass));// 回调的数据在target  中
     }
 

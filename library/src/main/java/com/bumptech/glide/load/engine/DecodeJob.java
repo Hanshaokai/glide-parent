@@ -153,6 +153,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
         }
     }
 
+
     /**
      * Called when we've finished encoding (either because the encode process is complete, or because
      * we don't have anything to encode).
@@ -323,6 +324,9 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
     }
 
     // 逐级的排除选择 从哪里获取数据
+    // ResourceCacheGenerator 从处理过的缓存加载数据
+    // DataCachGenerator 从原始缓存加载数据
+    // soureGenerator 从数据源 请求数据，如网略请求
     private Stage getNextStage(Stage current) {
         switch (current) {
             case INITIALIZE:
@@ -338,6 +342,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
             case FINISHED:
                 return Stage.FINISHED;
             default:
+
                 throw new IllegalArgumentException("Unrecognized stage: " + current);
         }
     }

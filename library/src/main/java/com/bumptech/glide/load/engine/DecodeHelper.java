@@ -181,7 +181,7 @@ final class DecodeHelper<Transcode> {
       for (int i = 0; i < size; i++) {
         ModelLoader<Object, ?> modelLoader = modelLoaders.get(i);
         LoadData<?> current =
-            modelLoader.buildLoadData(model, width, height, options);
+            modelLoader.buildLoadData(model, width, height, options);// 建造地址包装类
         if (current != null) {
           loadData.add(current);
         }
