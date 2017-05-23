@@ -49,8 +49,8 @@ class DataCacheGenerator implements DataFetcherGenerator,
         return false;
       }
 
-      Key sourceId = cacheKeys.get(sourceIdIndex);
-      Key originalKey = new DataCacheKey(sourceId, helper.getSignature());
+      Key sourceId = cacheKeys.get(sourceIdIndex); // 应该是url
+      Key originalKey = new DataCacheKey(sourceId, helper.getSignature());// 得到原始图片的缓存 构造key
       cacheFile = helper.getDiskCache().get(originalKey);
       if (cacheFile != null) {
         this.sourceKey = sourceId;
@@ -67,7 +67,7 @@ class DataCacheGenerator implements DataFetcherGenerator,
           modelLoader.buildLoadData(cacheFile, helper.getWidth(), helper.getHeight(),
               helper.getOptions());
       if (loadData != null && helper.hasLoadPath(loadData.fetcher.getDataClass())) {
-        started = true; //获取数据
+        started = true; //获取数据   对应的各种获取数据的方式
         loadData.fetcher.loadData(helper.getPriority(), this);
       }
     }

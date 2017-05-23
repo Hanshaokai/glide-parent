@@ -92,7 +92,7 @@ final class DecodeHelper<Transcode> {
   }
 
   DiskCache getDiskCache() {
-    return diskCacheProvider.getDiskCache();
+    return diskCacheProvider.getDiskCache();// 得到Glide自己编写的DiskLRUCache 工具类的实例
   }
 
   DiskCacheStrategy getDiskCacheStrategy() {

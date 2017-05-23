@@ -14,7 +14,8 @@ class EngineResource<Z> implements Resource<Z> {
   private final boolean isCacheable;
   private ResourceListener listener;
   private Key key;
-  private int acquired;
+  private int acquired; // 用来记录图被引用的次数 调用 acquire 的方法会让变量加1 调用release 方法会让变量
+  //减一
   private boolean isRecycled;
   private final Resource<Z> resource;
 
@@ -72,7 +73,7 @@ class EngineResource<Z> implements Resource<Z> {
    * than necessary. Generally external users should never call this method, the framework will take
    * care of this for you. </p>
    */
-  void acquire() {
+  void acquire() {// 变量加一
     if (isRecycled) {
       throw new IllegalStateException("Cannot acquire a recycled resource");
     }
@@ -85,7 +86,8 @@ class EngineResource<Z> implements Resource<Z> {
   /**
    * Decrements the number of consumers using the wrapped resource. Must be called on the main
    * thread.
-   *
+   * 当acquired 变量大于0时说明图片正在使用 也就应该放到 activiResoures 弱引用缓存当中
+   *而3经过release之后 如果acquired 变量 等于0了就说明图片不在使用了
    * <p> This must only be called when a consumer that called the {@link #acquire()} method is now
    * done with the resource. Generally external users should never callthis method, the framework
    * will take care of this for you. </p>
@@ -97,6 +99,7 @@ class EngineResource<Z> implements Resource<Z> {
     if (!Looper.getMainLooper().equals(Looper.myLooper())) {
       throw new IllegalThreadStateException("Must call release on the main thread");
     }
+    // 不在使用了就释放资源
     if (--acquired == 0) {
       listener.onResourceReleased(key, this);
     }

@@ -1,6 +1,7 @@
 package com.bumptech.glide.load.engine;
 
 import android.util.Log;
+
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.Encoder;
 import com.bumptech.glide.load.Key;
@@ -8,138 +9,139 @@ import com.bumptech.glide.load.data.DataFetcher;
 import com.bumptech.glide.load.model.ModelLoader;
 import com.bumptech.glide.load.model.ModelLoader.LoadData;
 import com.bumptech.glide.util.LogTime;
+
 import java.util.Collections;
 
 /**
  * Generates {@link com.bumptech.glide.load.data.DataFetcher DataFetchers} from original source data
  * using registered {@link com.bumptech.glide.load.model.ModelLoader ModelLoaders} and the model
  * provided for the load.
- *
+ * <p>
  * <p> Depending on the disk cache strategy, source data may first be written to disk and then
  * loaded from the cache file rather than returned directly. </p>
  */
 class SourceGenerator implements DataFetcherGenerator,
-    DataFetcher.DataCallback<Object>,
-    DataFetcherGenerator.FetcherReadyCallback {
-  private static final String TAG = "SourceGenerator";
+        DataFetcher.DataCallback<Object>,
+        DataFetcherGenerator.FetcherReadyCallback {
+    private static final String TAG = "SourceGenerator";
 
-  private final DecodeHelper<?> helper;
-  private final FetcherReadyCallback cb;
+    private final DecodeHelper<?> helper;
+    private final FetcherReadyCallback cb;
 
-  private int loadDataListIndex;
-  private DataCacheGenerator sourceCacheGenerator;
-  private Object dataToCache;
-  private volatile ModelLoader.LoadData<?> loadData;
-  private DataCacheKey originalKey;
+    private int loadDataListIndex;
+    private DataCacheGenerator sourceCacheGenerator;
+    private Object dataToCache;
+    private volatile ModelLoader.LoadData<?> loadData;
+    private DataCacheKey originalKey;
 
-  public SourceGenerator(DecodeHelper<?> helper, FetcherReadyCallback cb) {
-    this.helper = helper;
-    this.cb = cb;
-  }
-
-  @Override
-  public boolean startNext() {
-    if (dataToCache != null) {
-      Object data = dataToCache;
-      dataToCache = null;
-      cacheData(data); // 进行缓存
+    public SourceGenerator(DecodeHelper<?> helper, FetcherReadyCallback cb) {
+        this.helper = helper;
+        this.cb = cb;
     }
 
-    if (sourceCacheGenerator != null && sourceCacheGenerator.startNext()) {
-      return true;
-    }
-    sourceCacheGenerator = null;
+    @Override
+    public boolean startNext() {
+        if (dataToCache != null) {
+            Object data = dataToCache;
+            dataToCache = null;
+            cacheData(data); // 进行缓存
+        }
 
-    loadData = null;
-    boolean started = false;
-    while (!started && hasNextModelLoader()) {// 遍历所有的 包装地址
-      loadData = helper.getLoadData().get(loadDataListIndex++);
-      if (loadData != null
-          && (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())// 不是 从缓存中获得 资源类型不为空 进行 网络请求 返回 ture  上一级 不走循环体
-          || helper.hasLoadPath(loadData.fetcher.getDataClass()))) {
-        started = true;
-        //this 集成 回调出数据  请求代码在这里 返回的是 字节流
-        loadData.fetcher.loadData(helper.getPriority(), this);
-      }
-    }
-    return started;
-  }
+        if (sourceCacheGenerator != null && sourceCacheGenerator.startNext()) {
+            return true;
+        }
+        sourceCacheGenerator = null;
 
-  private boolean hasNextModelLoader() {
-    return loadDataListIndex < helper.getLoadData().size();// 从注册类里 获得 数据类型
-  }
-
-  private void cacheData(Object dataToCache) {
-    long startTime = LogTime.getLogTime();
-    try {
-      Encoder<Object> encoder = helper.getSourceEncoder(dataToCache);
-      DataCacheWriter<Object> writer =
-          new DataCacheWriter<>(encoder, dataToCache, helper.getOptions());
-      originalKey = new DataCacheKey(loadData.sourceKey, helper.getSignature());
-      helper.getDiskCache().put(originalKey, writer);
-      if (Log.isLoggable(TAG, Log.VERBOSE)) {
-        Log.v(TAG, "Finished encoding source to cache"
-            + ", key: " + originalKey
-            + ", data: " + dataToCache
-            + ", encoder: " + encoder
-            + ", duration: " + LogTime.getElapsedMillis(startTime));
-      }
-    } finally {
-      loadData.fetcher.cleanup();
+        loadData = null;
+        boolean started = false;
+        while (!started && hasNextModelLoader()) {// 遍历所有的 包装地址
+            loadData = helper.getLoadData().get(loadDataListIndex++);
+            if (loadData != null// 判断是否从缓存中获取
+                    && (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())// 不是 从缓存中获得 资源类型不为空 进行 网络请求 返回 ture  上一级 不走循环体
+                    || helper.hasLoadPath(loadData.fetcher.getDataClass()))) {
+                started = true;
+                //this 集成 回调出数据  请求代码在这里 返回的是 字节流
+                loadData.fetcher.loadData(helper.getPriority(), this);
+            }
+        }
+        return started;
     }
 
-    sourceCacheGenerator =
-        new DataCacheGenerator(Collections.singletonList(loadData.sourceKey), helper, this);
-  }
-
-  @Override
-  public void cancel() {
-    LoadData<?> local = loadData;
-    if (local != null) {
-      local.fetcher.cancel();
+    private boolean hasNextModelLoader() {
+        return loadDataListIndex < helper.getLoadData().size();// 从注册类里 获得 数据类型
     }
-  }
 
-  @Override
-  public void onDataReady(Object data) {
-    // 这里获得回调的字节流 回到主线程 case SOURCE:// 从网络获取
-    //与此代码有关return new SourceGenerator(decodeHelper, this);
-    DiskCacheStrategy diskCacheStrategy = helper.getDiskCacheStrategy();
-    if (data != null && diskCacheStrategy.isDataCacheable(loadData.fetcher.getDataSource())) {//r若是存储缓存的情况
-      dataToCache = data;
-      // We might be being called back on someone else's thread. Before doing anything, we should
-      // reschedule to get back onto Glide's thread.
-      cb.reschedule();
-    } else {//不存缓存
-      cb.onDataFetcherReady(loadData.sourceKey, data, loadData.fetcher,
-          loadData.fetcher.getDataSource(), originalKey);
+    private void cacheData(Object dataToCache) {
+        long startTime = LogTime.getLogTime();
+        try {
+            Encoder<Object> encoder = helper.getSourceEncoder(dataToCache);
+            DataCacheWriter<Object> writer =
+                    new DataCacheWriter<>(encoder, dataToCache, helper.getOptions());
+            originalKey = new DataCacheKey(loadData.sourceKey, helper.getSignature());
+            helper.getDiskCache().put(originalKey, writer);// 写如硬盘缓存 这里存储原始 图片 原始key
+            if (Log.isLoggable(TAG, Log.VERBOSE)) {
+                Log.v(TAG, "Finished encoding source to cache"
+                        + ", key: " + originalKey
+                        + ", data: " + dataToCache
+                        + ", encoder: " + encoder
+                        + ", duration: " + LogTime.getElapsedMillis(startTime));
+            }
+        } finally {
+            loadData.fetcher.cleanup();
+        }
+
+        sourceCacheGenerator =
+                new DataCacheGenerator(Collections.singletonList(loadData.sourceKey), helper, this);
     }
-  }
 
-  @Override
-  public void onLoadFailed(Exception e) {
-    cb.onDataFetcherFailed(originalKey, e, loadData.fetcher, loadData.fetcher.getDataSource());
-  }
+    @Override
+    public void cancel() {
+        LoadData<?> local = loadData;
+        if (local != null) {
+            local.fetcher.cancel();
+        }
+    }
 
-  @Override
-  public void reschedule() {
-    // We don't expect this to happen, although if we ever need it to we can delegate to our
-    // callback.
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void onDataReady(Object data) {
+        // 这里获得回调的字节流 回到主线程 case SOURCE:// 从网络获取
+        //与此代码有关return new SourceGenerator(decodeHelper, this);
+        DiskCacheStrategy diskCacheStrategy = helper.getDiskCacheStrategy();
+        if (data != null && diskCacheStrategy.isDataCacheable(loadData.fetcher.getDataSource())) {//r若是存储缓存的情况
+            dataToCache = data;
+            // We might be being called back on someone else's thread. Before doing anything, we should
+            // reschedule to get back onto Glide's thread.
+            cb.reschedule();
+        } else {//不存缓存
+            cb.onDataFetcherReady(loadData.sourceKey, data, loadData.fetcher,
+                    loadData.fetcher.getDataSource(), originalKey);
+        }
+    }
 
-  // Called from source cache generator.
-  @Override
-  public void onDataFetcherReady(Key sourceKey, Object data, DataFetcher<?> fetcher,
-      DataSource dataSource, Key attemptedKey) {
-    // This data fetcher will be loading from a File and provide the wrong data source, so override
-    // with the data source of the original fetcher
-    cb.onDataFetcherReady(sourceKey, data, fetcher, loadData.fetcher.getDataSource(), sourceKey);
-  }
+    @Override
+    public void onLoadFailed(Exception e) {
+        cb.onDataFetcherFailed(originalKey, e, loadData.fetcher, loadData.fetcher.getDataSource());
+    }
 
-  @Override
-  public void onDataFetcherFailed(Key sourceKey, Exception e, DataFetcher<?> fetcher,
-      DataSource dataSource) {
-    cb.onDataFetcherFailed(sourceKey, e, fetcher, loadData.fetcher.getDataSource());
-  }
+    @Override
+    public void reschedule() {
+        // We don't expect this to happen, although if we ever need it to we can delegate to our
+        // callback.
+        throw new UnsupportedOperationException();
+    }
+
+    // Called from source cache generator.
+    @Override
+    public void onDataFetcherReady(Key sourceKey, Object data, DataFetcher<?> fetcher,
+                                   DataSource dataSource, Key attemptedKey) {
+        // This data fetcher will be loading from a File and provide the wrong data source, so override
+        // with the data source of the original fetcher
+        cb.onDataFetcherReady(sourceKey, data, fetcher, loadData.fetcher.getDataSource(), sourceKey);
+    }
+
+    @Override
+    public void onDataFetcherFailed(Key sourceKey, Exception e, DataFetcher<?> fetcher,
+                                    DataSource dataSource) {
+        cb.onDataFetcherFailed(sourceKey, e, fetcher, loadData.fetcher.getDataSource());
+    }
 }

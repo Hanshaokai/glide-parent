@@ -267,7 +267,7 @@ class DecodeJob<R> implements DataFetcherGenerator.FetcherReadyCallback,
     }
 
     private DataFetcherGenerator getNextGenerator() {
-        switch (stage) {
+        switch (stage) {// 一个是内存缓存一个是硬盘缓存
             case RESOURCE_CACHE:
                 return new ResourceCacheGenerator(decodeHelper, this);
             case DATA_CACHE:

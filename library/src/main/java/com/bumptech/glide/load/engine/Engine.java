@@ -244,6 +244,12 @@ public class Engine implements EngineJobListener,
         return active;
     }
 
+    /**
+     *
+     * @param key
+     * @param isMemoryCacheable  是否跳过skip  默认false
+     * @return
+     */
     private EngineResource<?> loadFromCache(Key key, boolean isMemoryCacheable) {
         if (!isMemoryCacheable) {
             return null;
@@ -251,7 +257,8 @@ public class Engine implements EngineJobListener,
 
         EngineResource<?> cached = getEngineResourceFromCache(key); // 并做了删除
         if (cached != null) {
-            cached.acquire();// 放到活性缓存中
+            cached.acquire();// 放到活性缓存中 存储到一个activeResources 中 就是一个弱引用的HashMAp 用来缓存正在使用
+            // 使用中的 图片  使用activeResource 来缓存正在使用中的图片  可以保护这些图片不会被 LruCache 算法回收掉
             activeResources.put(key, new ResourceWeakReference(key, cached, getReferenceQueue()));
         }
         return cached;
@@ -259,7 +266,7 @@ public class Engine implements EngineJobListener,
 
     @SuppressWarnings("unchecked")
     private EngineResource<?> getEngineResourceFromCache(Key key) {
-        Resource<?> cached = cache.remove(key);
+        Resource<?> cached = cache.remove(key);//LruResourceCache 初始化的cache  从缓存中删除
 
         final EngineResource<?> result;
         if (cached == null) {
@@ -290,7 +297,7 @@ public class Engine implements EngineJobListener,
         if (resource != null) {
             resource.setResourceListener(key, this);//往其中加监听
 
-            if (resource.isCacheable()) {  // 进行缓存
+            if (resource.isCacheable()) {  // 进行缓存  这里是弱引用 缓存
                 activeResources.put(key, new ResourceWeakReference(key, resource, getReferenceQueue()));
             }
         }
@@ -317,6 +324,9 @@ public class Engine implements EngineJobListener,
     public void onResourceReleased(Key cacheKey, EngineResource resource) {
         Util.assertMainThread();
         activeResources.remove(cacheKey);
+        // 现将缓存 从 activieResourse中移除 然后再将它 put LURResoureseCache中
+        // 这样也就实现了 正在使用中的图片使用软引用来进行缓存 不在使用的图片使用lureCacheel
+        //来进行缓存的功能  这就是内存缓存的原理
         if (resource.isCacheable()) {
             cache.put(cacheKey, resource);
         } else {

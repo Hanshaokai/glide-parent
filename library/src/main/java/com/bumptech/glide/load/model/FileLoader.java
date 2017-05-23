@@ -70,7 +70,7 @@ public class FileLoader<Data> implements ModelLoader<File, Data> {
         callback.onLoadFailed(e);
         return;
       }
-      callback.onDataReady(data);
+      callback.onDataReady(data);// 回调到对应的 生成器中
     }
 
     @Override
