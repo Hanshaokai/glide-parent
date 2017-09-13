@@ -151,7 +151,7 @@ public class Glide implements ComponentCallbacks2 {
      */
     public static Glide get(Context context) {
         if (glide == null) {
-            synchronized (Glide.class) {  // 第一次取 初始化单利模式 初始化 Glid
+            synchronized (Glide.class) {  //   第一次取 初始化单利模式 初始化 Glid
                 if (glide == null) {
                     initGlide(context);
                 }
